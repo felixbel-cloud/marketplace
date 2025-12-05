@@ -29,19 +29,19 @@
       <aside class="filters">
         <h3>Filtros</h3>
         <label class="filter-option">
-          <input type="checkbox" checked />
+          <input type="checkbox" value="Alimentos" />
           <span>Alimentos</span>
         </label>
         <label class="filter-option">
-          <input type="checkbox" />
+          <input type="checkbox" value="Bebidas" />
           <span>Bebidas</span>
         </label>
         <label class="filter-option">
-          <input type="checkbox" />
+          <input type="checkbox" value="Lácteos" />
           <span>Lácteos</span>
         </label>
         <label class="filter-option">
-          <input type="checkbox" />
+          <input type="checkbox" value="Snacks" />
           <span>Snacks</span>
         </label>
       </aside>
@@ -49,56 +49,177 @@
       <section class="offers">
         <h2>Ofertas destacadas</h2>
         <div class="offers-list">
-          <article class="card">
-            <div>
-              <div class="title">Pan integral artesanal</div>
-              <div class="meta">Vence en 2 días</div>
-            </div>
-            <div class="price">
-              <div class="current">$3.200</div>
-              <div class="old">$4.500</div>
-            </div>
-            <button type="button">Agregar</button>
-          </article>
-
-          <article class="card">
-            <div>
-              <div class="title">Leche descremada 1L</div>
-              <div class="meta">Vence en 5 días</div>
-            </div>
-            <div class="price">
-              <div class="current">$2.100</div>
-              <div class="old">$2.850</div>
-            </div>
-            <button type="button">Agregar</button>
-          </article>
-
-          <article class="card">
-            <div>
-              <div class="title">Pack bebidas energéticas</div>
-              <div class="meta">Vence en 3 días</div>
-            </div>
-            <div class="price">
-              <div class="current">$9.900</div>
-              <div class="old">$12.400</div>
-            </div>
-            <button type="button">Agregar</button>
-          </article>
-
-          <article class="card">
-            <div>
-              <div class="title">Chips de maíz horneados</div>
-              <div class="meta">Vence en 1 semana</div>
-            </div>
-            <div class="price">
-              <div class="current">$1.750</div>
-              <div class="old">$2.300</div>
-            </div>
-            <button type="button">Agregar</button>
-          </article>
         </div>
       </section>
     </section>
   </main>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const offersList = document.querySelector(".offers-list");
+      const searchInput = document.querySelector(".search-bar input");
+      const searchButton = document.querySelector(".search-bar button");
+      const categoryCheckboxes = Array.from(
+        document.querySelectorAll(".filters input[type='checkbox']")
+      );
+
+      let allProducts = [];
+      let currentProducts = [];
+      const categoryCache = new Map();
+
+      const currencyFormatter = new Intl.NumberFormat("es-PE", {
+        style: "currency",
+        currency: "PEN",
+        minimumFractionDigits: 2,
+      });
+
+      function formatPrice(value) {
+        if (value === null || value === undefined || Number.isNaN(value)) {
+          return "-";
+        }
+        return currencyFormatter.format(value);
+      }
+
+      function expirationLabel(dateString) {
+        if (!dateString) return "Sin fecha de vencimiento";
+        const today = new Date();
+        const target = new Date(`${dateString}T00:00:00`);
+        if (Number.isNaN(target.getTime())) return "Sin fecha de vencimiento";
+        const diffDays = Math.ceil(
+          (target.getTime() - today.setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24)
+        );
+        if (diffDays > 1) return `Vence en ${diffDays} días`;
+        if (diffDays === 1) return "Vence en 1 día";
+        if (diffDays === 0) return "Vence hoy";
+        return "Producto vencido";
+      }
+
+      function renderProducts(products) {
+        offersList.innerHTML = "";
+
+        if (!products.length) {
+          const empty = document.createElement("p");
+          empty.className = "meta";
+          empty.textContent = "No hay productos disponibles con los filtros actuales.";
+          offersList.appendChild(empty);
+          return;
+        }
+
+        products.forEach((product) => {
+          const card = document.createElement("article");
+          card.className = "card";
+
+          const info = document.createElement("div");
+          const title = document.createElement("div");
+          title.className = "title";
+          title.textContent = product.nombre || "Producto sin nombre";
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.textContent = expirationLabel(product.fechaVencimiento);
+          info.appendChild(title);
+          info.appendChild(meta);
+
+          const price = document.createElement("div");
+          price.className = "price";
+          const current = document.createElement("div");
+          current.className = "current";
+          current.textContent = formatPrice(product.precioDescuento);
+          const old = document.createElement("div");
+          old.className = "old";
+          old.textContent = formatPrice(product.precioOriginal);
+          price.appendChild(current);
+          price.appendChild(old);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = "Agregar";
+
+          card.appendChild(info);
+          card.appendChild(price);
+          card.appendChild(button);
+          offersList.appendChild(card);
+        });
+      }
+
+      function applySearch(products) {
+        const term = searchInput.value.trim().toLowerCase();
+        if (!term) return products;
+        return products.filter((product) =>
+          (product.nombre || "").toLowerCase().includes(term)
+        );
+      }
+
+      function applyFilters() {
+        const filtered = applySearch(currentProducts);
+        renderProducts(filtered);
+      }
+
+      async function fetchProducts() {
+        try {
+          const response = await fetch("/api/productos");
+          if (!response.ok) throw new Error("No se pudieron obtener los productos.");
+          const data = await response.json();
+          allProducts = Array.isArray(data) ? data : [];
+          currentProducts = allProducts;
+          applyFilters();
+        } catch (error) {
+          offersList.innerHTML = "";
+          const message = document.createElement("p");
+          message.className = "meta";
+          message.textContent = "Ocurrió un problema al cargar los productos.";
+          offersList.appendChild(message);
+          // Mantener vacío si falla
+        }
+      }
+
+      async function fetchProductsByCategory(category) {
+        if (!category) return [];
+        if (categoryCache.has(category)) return categoryCache.get(category);
+        try {
+          const response = await fetch(
+            `/api/productos/categoria/${encodeURIComponent(category)}`
+          );
+          if (!response.ok) throw new Error();
+          const data = await response.json();
+          const normalized = Array.isArray(data) ? data : [];
+          categoryCache.set(category, normalized);
+          return normalized;
+        } catch (error) {
+          return [];
+        }
+      }
+
+      async function updateByCategory() {
+        const activeCategories = categoryCheckboxes
+          .filter((checkbox) => checkbox.checked)
+          .map((checkbox) => checkbox.value || checkbox.nextElementSibling?.textContent.trim())
+          .filter(Boolean);
+
+        if (!activeCategories.length) {
+          currentProducts = allProducts;
+          applyFilters();
+          return;
+        }
+
+        const results = await Promise.all(
+          activeCategories.map((category) => fetchProductsByCategory(category))
+        );
+        const merged = new Map();
+        results.flat().forEach((product) => {
+          merged.set(product.id || `${product.nombre}-${product.categoria}`, product);
+        });
+        currentProducts = Array.from(merged.values());
+        applyFilters();
+      }
+
+      searchInput.addEventListener("input", applyFilters);
+      searchButton.addEventListener("click", applyFilters);
+
+      categoryCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", updateByCategory);
+      });
+
+      fetchProducts();
+    });
+  </script>
 </body>
 </html>
