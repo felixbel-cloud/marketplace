@@ -1,13 +1,17 @@
 package com.bel.marketplace.controller;
 
+import com.bel.marketplace.dto.UsuarioRequest;
 import com.bel.marketplace.entity.RolUsuario;
 import com.bel.marketplace.entity.Usuario;
 import com.bel.marketplace.service.UsuarioServiceInterface;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -35,12 +39,14 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> crear(@RequestBody Usuario usuario) {
-        if (usuario.getRol() == null) {
-            usuario.setRol(RolUsuario.CLIENTE);
+    public ResponseEntity<Usuario> crear(@RequestBody UsuarioRequest request) {
+        try {
+            Usuario usuario = mapearUsuario(request);
+            Usuario creado = usuarioService.crear(usuario);
+            return ResponseEntity.created(URI.create("/api/usuarios/" + creado.getId())).body(creado);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rol inválido. Usa CLIENTE o NEGOCIO");
         }
-        Usuario creado = usuarioService.crear(usuario);
-        return ResponseEntity.created(URI.create("/api/usuarios/" + creado.getId())).body(creado);
     }
 
     @PutMapping("/{id}")
@@ -53,5 +59,17 @@ public class UsuarioController {
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         usuarioService.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private Usuario mapearUsuario(UsuarioRequest request) {
+        Usuario usuario = new Usuario();
+        usuario.setNombreCompleto(request.getNombre());
+        usuario.setEmail(request.getEmail());
+        usuario.setPassword(request.getContrasena());
+
+        String rolString = request.getRol();
+        RolUsuario rol = rolString == null ? RolUsuario.CLIENTE : RolUsuario.valueOf(rolString.toUpperCase(Locale.ROOT));
+        usuario.setRol(rol);
+        return usuario;
     }
 }
