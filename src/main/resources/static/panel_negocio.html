@@ -102,6 +102,7 @@
       let products = [];
       let editingProduct = null;
 
+      // Recupera la sesión almacenada en localStorage
       function loadCurrentUser() {
         const stored = localStorage.getItem("usuarioActual");
         if (!stored) return null;
@@ -116,6 +117,7 @@
         return null;
       }
 
+      // Ajusta cabecera según sesión activa
       function renderSession() {
         const currentUser = loadCurrentUser();
         if (currentUser) {
@@ -139,11 +141,13 @@
 
       renderSession();
 
+      // Escribe estados breves sobre las operaciones del panel
       function setStatus(message, type = "info") {
         statusMessage.textContent = message;
         statusMessage.className = `status ${type}`;
       }
 
+      // Formatea precios mostrados en la tabla
       function formatCurrency(value) {
         if (value === null || value === undefined || Number.isNaN(value)) return "-";
         return new Intl.NumberFormat("es-PE", {
@@ -153,6 +157,7 @@
         }).format(value);
       }
 
+      // Presenta la fecha de vencimiento de forma legible
       function formatDate(value) {
         if (!value) return "Sin fecha";
         try {
@@ -164,6 +169,7 @@
         }
       }
 
+      // Pinta las filas de productos del negocio
       function renderTable(data) {
         tableBody.innerHTML = "";
 
@@ -198,6 +204,7 @@
         });
       }
 
+      // Consulta los productos del negocio y los coloca en la tabla
       async function loadProducts(businessId) {
         if (!businessId) {
           setStatus("Ingresa un ID de negocio para continuar", "warning");
@@ -218,10 +225,12 @@
         }
       }
 
+      // Guarda el ID de negocio para restaurarlo luego
       function persistBusinessId(value) {
         localStorage.setItem("idNegocioActual", value);
       }
 
+      // Lee el ID de negocio guardado al cargar la página
       function restoreBusinessId() {
         const stored = localStorage.getItem("idNegocioActual");
         if (stored) {
@@ -231,6 +240,7 @@
         }
       }
 
+      // Prepara el formulario de edición con el producto seleccionado
       function startEdit(productId) {
         const product = products.find((item) => String(item.id) === String(productId));
         if (!product) return;
@@ -241,12 +251,14 @@
         editPanel.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
+      // Oculta el panel de edición y limpia datos
       function resetEdit() {
         editingProduct = null;
         editForm.reset();
         editPanel.hidden = true;
       }
 
+      // Elimina un producto tras confirmación del usuario
       async function deleteProduct(productId) {
         if (!confirm("¿Eliminar este producto?")) return;
         try {
@@ -263,6 +275,7 @@
         }
       }
 
+      // Envía los cambios del formulario de edición
       async function submitEdit(event) {
         event.preventDefault();
         if (!editingProduct) return;
