@@ -30,6 +30,20 @@ public class UsuarioService implements UsuarioServiceInterface {
     }
 
     @Override
+    public Usuario obtenerPorEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El email es obligatorio");
+        }
+
+        Usuario usuario = usuarioRepository.findByEmail(email);
+        if (usuario == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+        }
+
+        return usuario;
+    }
+
+    @Override
     public Usuario crear(Usuario usuario) {
         validarUsuario(usuario, null);
         return usuarioRepository.save(usuario);

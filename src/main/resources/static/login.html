@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar sesión | Marketplace</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="brand">Market</div>
+    <nav class="nav-links">
+      <a href="producto_nuevo.html">Publicar producto</a>
+      <a href="reservas.html">Mis reservas</a>
+      <a href="login.html">Iniciar sesión</a>
+      <a href="register.html">Registrarse</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="form-section">
+      <h1>Inicia sesión</h1>
+      <p class="meta">
+        Ingresa tu correo y contraseña para continuar navegando en el marketplace.
+      </p>
+
+      <form id="login-form" class="form-card">
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" name="password" required placeholder="Tu contraseña" />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="submit-button">Ingresar</button>
+        </div>
+      </form>
+
+      <div id="feedback" class="alert" hidden></div>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("login-form");
+      const feedback = document.getElementById("feedback");
+      const submitButton = document.getElementById("submit-button");
+      const API_URL = "http://localhost:8084/api/usuarios/buscar";
+
+      function showMessage(message, type = "info") {
+        feedback.hidden = false;
+        feedback.className = `alert ${type}`;
+        feedback.textContent = message;
+      }
+
+      function saveSession(usuario) {
+        const nombre = usuario.nombreCompleto || usuario.nombre || usuario.email;
+        localStorage.setItem(
+          "usuarioActual",
+          JSON.stringify({ idUsuario: usuario.id, nombre })
+        );
+      }
+
+      async function handleSubmit(event) {
+        event.preventDefault();
+        feedback.hidden = true;
+
+        const email = form.email.value.trim();
+        const password = form.password.value.trim();
+
+        if (!email || !password) {
+          showMessage("Por favor completa ambos campos.", "error");
+          return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Ingresando...";
+
+        try {
+          const response = await fetch(`${API_URL}?email=${encodeURIComponent(email)}`);
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || "Usuario no encontrado.");
+          }
+
+          const usuario = await response.json();
+          if (usuario.password !== password) {
+            throw new Error("La contraseña no es correcta.");
+          }
+
+          saveSession(usuario);
+          window.location.href = "index.html";
+        } catch (error) {
+          showMessage(error.message || "No se pudo iniciar sesión.", "error");
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = "Ingresar";
+        }
+      }
+
+      form.addEventListener("submit", handleSubmit);
+    });
+  </script>
+</body>
+</html>
