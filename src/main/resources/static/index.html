@@ -93,6 +93,7 @@
         minimumFractionDigits: 2,
       });
 
+      // Recupera la sesión guardada en localStorage si existe
       function loadCurrentUser() {
         const stored = localStorage.getItem("usuarioActual");
         if (!stored) return null;
@@ -107,6 +108,7 @@
         return null;
       }
 
+      // Ajusta la navegación según haya sesión activa o no
       function renderSession() {
         const currentUser = loadCurrentUser();
         if (currentUser) {
@@ -130,6 +132,7 @@
 
       renderSession();
 
+      // Formatea precios para mostrarlos en soles
       function formatPrice(value) {
         if (value === null || value === undefined || Number.isNaN(value)) {
           return "-";
@@ -137,6 +140,7 @@
         return currencyFormatter.format(value);
       }
 
+      // Muestra etiqueta amigable según la fecha de vencimiento
       function expirationLabel(dateString) {
         if (!dateString) return "Sin fecha de vencimiento";
         const today = new Date();
@@ -151,6 +155,7 @@
         return "Producto vencido";
       }
 
+      // Dibuja las tarjetas de productos cargados
       function renderProducts(products) {
         offersList.innerHTML = "";
 
@@ -198,6 +203,7 @@
         });
       }
 
+      // Filtra productos por el término de búsqueda
       function applySearch(products) {
         const term = searchInput.value.trim().toLowerCase();
         if (!term) return products;
@@ -206,11 +212,13 @@
         );
       }
 
+      // Aplica filtros activos sobre el listado actual
       function applyFilters() {
         const filtered = applySearch(currentProducts);
         renderProducts(filtered);
       }
 
+      // Carga todos los productos disponibles desde la API
       async function fetchProducts() {
         try {
           const response = await fetch(API_BASE_URL + "/productos");
@@ -230,6 +238,7 @@
         }
       }
 
+      // Obtiene productos por categoría usando caché en memoria
       async function fetchProductsByCategory(category) {
         if (!category) return [];
         if (categoryCache.has(category)) return categoryCache.get(category);
@@ -247,6 +256,7 @@
         }
       }
 
+      // Carga las ofertas próximas a vencer y respeta filtros activos
       async function fetchExpiringProducts() {
         try {
           const response = await fetch(
@@ -276,6 +286,7 @@
         }
       }
 
+      // Aplica filtrado por categorías seleccionadas
       async function updateByCategory() {
         const activeCategories = categoryCheckboxes
           .filter((checkbox) => checkbox.checked)

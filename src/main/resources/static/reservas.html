@@ -116,6 +116,7 @@
 
       const API_BASE_URL = "http://localhost:8084/api/reservas";
 
+      // Recupera datos básicos de sesión desde localStorage
       function loadCurrentUser() {
         const stored = localStorage.getItem("usuarioActual");
         if (!stored) return null;
@@ -130,6 +131,7 @@
         return null;
       }
 
+      // Actualiza el header según haya usuario activo
       function renderSession() {
         const currentUser = loadCurrentUser();
         if (currentUser) {
@@ -153,11 +155,13 @@
 
       renderSession();
 
+      // Muestra el estado del envío del formulario de reserva
       function setStatus(text, isError = false) {
         formStatus.textContent = text;
         formStatus.style.color = isError ? "#b00020" : "#0f5132";
       }
 
+      // Formatea la fecha de reserva para la tabla
       function formatDate(dateString) {
         if (!dateString) return "-";
         const date = new Date(dateString);
@@ -165,6 +169,7 @@
         return date.toLocaleDateString("es-PE", { year: "numeric", month: "short", day: "numeric" });
       }
 
+      // Renderiza las filas de reservas obtenidas
       function renderReservations(reservations) {
         reservationsBody.innerHTML = "";
 
@@ -201,6 +206,7 @@
         });
       }
 
+      // Carga reservas desde la API y permite filtros
       async function fetchReservations(url = API_BASE_URL) {
         reservationsBody.innerHTML = `
           <tr>
@@ -223,6 +229,7 @@
         }
       }
 
+      // Envía el formulario para crear una nueva reserva
       async function handleSubmit(event) {
         event.preventDefault();
         setStatus("");
@@ -261,6 +268,7 @@
         }
       }
 
+      // Aplica el filtro por ID de cliente cuando corresponde
       function handleFilter() {
         const idCliente = filterInput.value.trim();
         if (!idCliente) {

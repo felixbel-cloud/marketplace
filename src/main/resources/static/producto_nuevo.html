@@ -108,6 +108,7 @@
       const submitButton = document.getElementById("submit-button");
       const API_URL = "http://localhost:8084/api/productos";
 
+      // Recupera la sesión almacenada en localStorage
       function loadCurrentUser() {
         const stored = localStorage.getItem("usuarioActual");
         if (!stored) return null;
@@ -122,6 +123,7 @@
         return null;
       }
 
+      // Ajusta la cabecera según el estado de la sesión
       function renderSession() {
         const currentUser = loadCurrentUser();
         if (currentUser) {
@@ -145,11 +147,13 @@
 
       renderSession();
 
+      // Informa brevemente el estado del envío del formulario
       function setStatus(text, isError = false) {
         message.textContent = text;
         message.style.color = isError ? "#b00020" : "#0f5132";
       }
 
+      // Envía el formulario para registrar el producto
       async function handleSubmit(event) {
         event.preventDefault();
         setStatus("");
