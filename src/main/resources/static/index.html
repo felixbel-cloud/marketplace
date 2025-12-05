@@ -62,6 +62,8 @@
         document.querySelectorAll(".filters input[type='checkbox']")
       );
 
+      const API_BASE_URL = "http://localhost:8084/api";
+
       let allProducts = [];
       let currentProducts = [];
       const categoryCache = new Map();
@@ -155,7 +157,7 @@
 
       async function fetchProducts() {
         try {
-          const response = await fetch("/api/productos");
+          const response = await fetch(API_BASE_URL + "/productos");
           if (!response.ok) throw new Error("No se pudieron obtener los productos.");
           const data = await response.json();
           allProducts = Array.isArray(data) ? data : [];
@@ -176,7 +178,7 @@
         if (categoryCache.has(category)) return categoryCache.get(category);
         try {
           const response = await fetch(
-            `/api/productos/categoria/${encodeURIComponent(category)}`
+            API_BASE_URL + "/productos/categoria/" + encodeURIComponent(category)
           );
           if (!response.ok) throw new Error();
           const data = await response.json();
