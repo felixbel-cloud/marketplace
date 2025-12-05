@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrarse | Marketplace</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="brand">Market</div>
+    <nav class="nav-links">
+      <a href="producto_nuevo.html">Publicar producto</a>
+      <a href="reservas.html">Mis reservas</a>
+      <a href="login.html">Iniciar sesión</a>
+      <a href="register.html">Registrarse</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="form-section">
+      <h1>Crea tu cuenta</h1>
+      <p class="meta">
+        Completa el formulario para registrarte y empezar a usar el marketplace.
+      </p>
+
+      <form id="register-form" class="form-card">
+        <div class="form-group">
+          <label for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre y apellidos" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" name="password" required placeholder="Crea una contraseña" />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="submit-button">Registrarme</button>
+        </div>
+      </form>
+
+      <div id="feedback" class="alert" hidden></div>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("register-form");
+      const feedback = document.getElementById("feedback");
+      const submitButton = document.getElementById("submit-button");
+      const API_URL = "http://localhost:8084/api/usuarios";
+
+      function showMessage(message, type = "info", includeLogin = false) {
+        feedback.hidden = false;
+        feedback.className = `alert ${type}`;
+        feedback.innerHTML = "";
+
+        const text = document.createElement("p");
+        text.textContent = message;
+        feedback.appendChild(text);
+
+        if (includeLogin) {
+          const goToLogin = document.createElement("a");
+          goToLogin.href = "login.html";
+          goToLogin.className = "button-link";
+          goToLogin.textContent = "Ir a iniciar sesión";
+          feedback.appendChild(goToLogin);
+        }
+      }
+
+      async function handleSubmit(event) {
+        event.preventDefault();
+        feedback.hidden = true;
+
+        const nombreCompleto = form.nombre.value.trim();
+        const email = form.email.value.trim();
+        const password = form.password.value.trim();
+
+        if (!nombreCompleto || !email || !password) {
+          showMessage("Por favor completa todos los campos.", "error");
+          return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = "Registrando...";
+
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ nombreCompleto, email, password }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || "No se pudo completar el registro.");
+          }
+
+          showMessage("Registro exitoso. Ya puedes iniciar sesión.", "success", true);
+          form.reset();
+        } catch (error) {
+          showMessage(error.message || "Ocurrió un error al registrar al usuario.", "error");
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = "Registrarme";
+        }
+      }
+
+      form.addEventListener("submit", handleSubmit);
+    });
+  </script>
+</body>
+</html>
