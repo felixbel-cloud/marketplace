@@ -1,17 +1,15 @@
 package com.bel.marketplace.controller;
 
-import com.bel.marketplace.dto.UsuarioRequest;
 import com.bel.marketplace.entity.RolUsuario;
 import com.bel.marketplace.entity.Usuario;
 import com.bel.marketplace.service.UsuarioServiceInterface;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -39,14 +37,17 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> crear(@RequestBody UsuarioRequest request) {
-        try {
-            Usuario usuario = mapearUsuario(request);
-            Usuario creado = usuarioService.crear(usuario);
-            return ResponseEntity.created(URI.create("/api/usuarios/" + creado.getId())).body(creado);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rol inválido. Usa CLIENTE o NEGOCIO");
-        }
+    public ResponseEntity<Map<String, Object>> crear(@RequestBody Map<String, Object> body) {
+        Usuario usuario = mapearUsuario(body);
+        Usuario creado = usuarioService.crear(usuario);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", creado.getId());
+        response.put("nombre", creado.getNombreCompleto());
+        response.put("email", creado.getEmail());
+        response.put("rol", creado.getRol());
+
+        return ResponseEntity.created(URI.create("/api/usuarios/" + creado.getId())).body(response);
     }
 
     @PutMapping("/{id}")
@@ -61,28 +62,21 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    private Usuario mapearUsuario(UsuarioRequest request) {
+    private Usuario mapearUsuario(Map<String, Object> body) {
         Usuario usuario = new Usuario();
-        usuario.setNombreCompleto(request.getNombre());
-        usuario.setEmail(request.getEmail());
-        usuario.setPassword(request.getContrasena());
+        usuario.setNombreCompleto((String) body.get("nombre"));
+        usuario.setEmail((String) body.get("email"));
+        usuario.setPassword((String) body.get("contrasena"));
 
-        String rolString = request.getRol();
-        RolUsuario rol;
-        if (rolString == null || rolString.trim().isEmpty()) {
-            rol = RolUsuario.CLIENTE;
-        } else {
-            switch (rolString.trim().toUpperCase(Locale.ROOT)) {
-                case "CLIENTE":
-                    rol = RolUsuario.CLIENTE;
-                    break;
-                case "NEGOCIO":
-                    rol = RolUsuario.NEGOCIO;
-                    break;
-                default:
-                    throw new IllegalArgumentException("Rol inválido");
+        String rolStr = (String) body.get("rol");
+        RolUsuario rol = RolUsuario.CLIENTE;
+
+        if (rolStr != null && !rolStr.trim().isEmpty()) {
+            if ("NEGOCIO".equalsIgnoreCase(rolStr.trim())) {
+                rol = RolUsuario.NEGOCIO;
             }
         }
+
         usuario.setRol(rol);
         return usuario;
     }
