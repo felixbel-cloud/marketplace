@@ -2,7 +2,9 @@ package com.bel.marketplace.service.impl;
 
 import com.bel.marketplace.entity.Negocio;
 import com.bel.marketplace.entity.Usuario;
+import com.bel.marketplace.entity.Producto;
 import com.bel.marketplace.repository.NegocioRepository;
+import com.bel.marketplace.repository.ProductoRepository;
 import com.bel.marketplace.repository.UsuarioRepository;
 import com.bel.marketplace.service.NegocioServiceInterface;
 import org.springframework.http.HttpStatus;
@@ -18,10 +20,12 @@ public class NegocioService implements NegocioServiceInterface {
 
     private final NegocioRepository negocioRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ProductoRepository productoRepository;
 
-    public NegocioService(NegocioRepository negocioRepository, UsuarioRepository usuarioRepository) {
+    public NegocioService(NegocioRepository negocioRepository, UsuarioRepository usuarioRepository, ProductoRepository productoRepository) {
         this.negocioRepository = negocioRepository;
         this.usuarioRepository = usuarioRepository;
+        this.productoRepository = productoRepository;
     }
 
     @Override
@@ -63,6 +67,12 @@ public class NegocioService implements NegocioServiceInterface {
     public void eliminar(Long id) {
         Negocio negocio = obtenerPorId(id);
         negocioRepository.delete(negocio);
+    }
+
+    @Override
+    public List<Producto> obtenerProductos(Long negocioId) {
+        Negocio negocio = obtenerPorId(negocioId);
+        return productoRepository.findByNegocioId(negocio.getId());
     }
 
     private void asignarUsuario(Negocio negocio) {

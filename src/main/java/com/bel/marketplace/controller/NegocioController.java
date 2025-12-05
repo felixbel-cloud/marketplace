@@ -3,7 +3,6 @@ package com.bel.marketplace.controller;
 import com.bel.marketplace.entity.Negocio;
 import com.bel.marketplace.entity.Producto;
 import com.bel.marketplace.service.NegocioServiceInterface;
-import com.bel.marketplace.service.ProductoServiceInterface;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,11 +15,9 @@ import java.util.List;
 public class NegocioController {
 
     private final NegocioServiceInterface negocioService;
-    private final ProductoServiceInterface productoService;
 
-    public NegocioController(NegocioServiceInterface negocioService, ProductoServiceInterface productoService) {
+    public NegocioController(NegocioServiceInterface negocioService) {
         this.negocioService = negocioService;
-        this.productoService = productoService;
     }
 
     @GetMapping
@@ -53,7 +50,6 @@ public class NegocioController {
 
     @GetMapping("/{id}/productos")
     public ResponseEntity<List<Producto>> listarProductosPorNegocio(@PathVariable Long id) {
-        negocioService.obtenerPorId(id);
-        return ResponseEntity.ok(productoService.listarPorNegocio(id));
+        return ResponseEntity.ok(negocioService.obtenerProductos(id));
     }
 }
