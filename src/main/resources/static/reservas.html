@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reservas</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="brand">Market</div>
+    <nav class="nav-links">
+      <a href="index.html">Inicio</a>
+      <a href="producto_nuevo.html">Publicar producto</a>
+      <a href="#" aria-disabled="true">Log in</a>
+      <a href="#" aria-disabled="true">Register</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="hero">
+      <h1>Gestiona tus reservas</h1>
+      <p>Registra nuevas reservas y consulta el historial de forma rápida.</p>
+    </section>
+
+    <section class="layout">
+      <section class="offers" style="width: 100%;">
+        <h2>Nueva reserva</h2>
+        <form id="reservation-form" class="card" style="gap: 12px;">
+          <div class="filters" style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: stretch;">
+            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+              <span>ID del cliente</span>
+              <input type="number" name="idCliente" min="1" step="1" required placeholder="Ej. 12" />
+            </label>
+
+            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+              <span>ID del producto</span>
+              <input type="number" name="idProducto" min="1" step="1" required placeholder="Ej. 34" />
+            </label>
+
+            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+              <span>Cantidad</span>
+              <input type="number" name="cantidad" min="1" step="1" required placeholder="Ej. 2" />
+            </label>
+          </div>
+
+          <div class="meta" style="margin-top: -4px;">La fecha se asignará automáticamente al día actual.</div>
+          <button type="submit" id="submit-reservation">Registrar reserva</button>
+          <div id="form-status" class="meta" role="alert" aria-live="polite"></div>
+        </form>
+      </section>
+
+      <section class="offers" style="width: 100%;">
+        <div style="display: flex; align-items: center; gap: 12px; justify-content: space-between; flex-wrap: wrap;">
+          <h2>Reservas registradas</h2>
+          <div class="search-bar" style="gap: 8px; width: auto;">
+            <input type="number" id="idClienteFiltro" min="1" step="1" placeholder="ID cliente" />
+            <button type="button" id="filter-button">Filtrar</button>
+            <button type="button" id="reset-button">Ver todas</button>
+          </div>
+        </div>
+
+        <div class="card" style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th style="text-align: left; padding: 8px;">ID</th>
+                <th style="text-align: left; padding: 8px;">Cliente</th>
+                <th style="text-align: left; padding: 8px;">Producto</th>
+                <th style="text-align: left; padding: 8px;">Cantidad</th>
+                <th style="text-align: left; padding: 8px;">Fecha</th>
+              </tr>
+            </thead>
+            <tbody id="reservations-body">
+              <tr>
+                <td colspan="5" style="padding: 12px; color: #6b7280;">Cargando reservas...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("reservation-form");
+      const formStatus = document.getElementById("form-status");
+      const submitButton = document.getElementById("submit-reservation");
+      const reservationsBody = document.getElementById("reservations-body");
+      const filterInput = document.getElementById("idClienteFiltro");
+      const filterButton = document.getElementById("filter-button");
+      const resetButton = document.getElementById("reset-button");
+
+      const API_BASE_URL = "http://localhost:8084/api/reservas";
+
+      function setStatus(text, isError = false) {
+        formStatus.textContent = text;
+        formStatus.style.color = isError ? "#b00020" : "#0f5132";
+      }
+
+      function formatDate(dateString) {
+        if (!dateString) return "-";
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return dateString;
+        return date.toLocaleDateString("es-PE", { year: "numeric", month: "short", day: "numeric" });
+      }
+
+      function renderReservations(reservations) {
+        reservationsBody.innerHTML = "";
+
+        if (!reservations.length) {
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+          cell.colSpan = 5;
+          cell.style.padding = "12px";
+          cell.style.color = "#6b7280";
+          cell.textContent = "No hay reservas registradas.";
+          row.appendChild(cell);
+          reservationsBody.appendChild(row);
+          return;
+        }
+
+        reservations.forEach((reservation) => {
+          const row = document.createElement("tr");
+          const cells = [
+            reservation.id,
+            reservation.idCliente,
+            reservation.idProducto,
+            reservation.cantidad,
+            formatDate(reservation.fechaReserva),
+          ];
+
+          cells.forEach((value) => {
+            const cell = document.createElement("td");
+            cell.style.padding = "8px";
+            cell.textContent = value ?? "-";
+            row.appendChild(cell);
+          });
+
+          reservationsBody.appendChild(row);
+        });
+      }
+
+      async function fetchReservations(url = API_BASE_URL) {
+        reservationsBody.innerHTML = `
+          <tr>
+            <td colspan="5" style="padding: 12px; color: #6b7280;">Cargando reservas...</td>
+          </tr>
+        `;
+
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error();
+          const data = await response.json();
+          const list = Array.isArray(data) ? data : [];
+          renderReservations(list);
+        } catch (error) {
+          reservationsBody.innerHTML = `
+            <tr>
+              <td colspan="5" style="padding: 12px; color: #b00020;">No fue posible obtener las reservas.</td>
+            </tr>
+          `;
+        }
+      }
+
+      async function handleSubmit(event) {
+        event.preventDefault();
+        setStatus("");
+        submitButton.disabled = true;
+
+        const formData = new FormData(form);
+        const today = new Date().toISOString().split("T")[0];
+        const payload = {
+          idCliente: parseInt(formData.get("idCliente"), 10) || null,
+          idProducto: parseInt(formData.get("idProducto"), 10) || null,
+          cantidad: parseInt(formData.get("cantidad"), 10) || 1,
+          fechaReserva: today,
+        };
+
+        try {
+          const response = await fetch(API_BASE_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || "No se pudo registrar la reserva.");
+          }
+
+          setStatus("Reserva registrada correctamente.");
+          form.reset();
+          fetchReservations();
+        } catch (error) {
+          setStatus("No pudimos registrar la reserva. Intenta nuevamente.", true);
+        } finally {
+          submitButton.disabled = false;
+        }
+      }
+
+      function handleFilter() {
+        const idCliente = filterInput.value.trim();
+        if (!idCliente) {
+          fetchReservations();
+          return;
+        }
+        const url = `${API_BASE_URL}/cliente/${encodeURIComponent(idCliente)}`;
+        fetchReservations(url);
+      }
+
+      form.addEventListener("submit", handleSubmit);
+      filterButton.addEventListener("click", handleFilter);
+      resetButton.addEventListener("click", () => {
+        filterInput.value = "";
+        fetchReservations();
+      });
+
+      fetchReservations();
+    });
+  </script>
+</body>
+</html>
