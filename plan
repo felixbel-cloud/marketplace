@@ -1,0 +1,5 @@
+Tarea para Codex (cópiala tal cual en /plan)
+
+Título: Agregar CorsFilter para permitir origen http://localhost:63342
+Prompt:
+En el proyecto Spring Boot "marketplace", agregar un filtro CORS global. Crear una clase CorsConfig en el paquete com.bel.marketplace.config anotada con @Configuration. Dentro, definir un @Bean de tipo org.springframework.web.filter.CorsFilter. En ese bean, crear una instancia de org.springframework.web.cors.CorsConfiguration, habilitar allowCredentials(false), allowedOrigins(List.of("http://localhost:63342")), allowedHeaders(List.of("*")) y allowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")). Registrar esta configuración en un UrlBasedCorsConfigurationSource sobre la ruta "/api/**" y retornar un nuevo CorsFilter(source). No modificar la clase WebConfig existente ni los controladores. El objetivo es que todas las respuestas de /api/** incluyan el header Access-Control-Allow-Origin para el origen http://localhost:63342.
