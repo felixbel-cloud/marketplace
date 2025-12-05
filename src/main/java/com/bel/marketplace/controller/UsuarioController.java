@@ -1,5 +1,6 @@
 package com.bel.marketplace.controller;
 
+import com.bel.marketplace.entity.RolUsuario;
 import com.bel.marketplace.entity.Usuario;
 import com.bel.marketplace.service.UsuarioServiceInterface;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,9 @@ public class UsuarioController {
 
     @PostMapping
     public ResponseEntity<Usuario> crear(@RequestBody Usuario usuario) {
+        if (usuario.getRol() == null) {
+            usuario.setRol(RolUsuario.CLIENTE);
+        }
         Usuario creado = usuarioService.crear(usuario);
         return ResponseEntity.created(URI.create("/api/usuarios/" + creado.getId())).body(creado);
     }

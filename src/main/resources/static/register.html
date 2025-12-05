@@ -11,9 +11,9 @@
     <div class="brand">Market</div>
     <nav class="nav-links">
       <a href="index.html">Inicio</a>
-      <a href="producto_nuevo.html">Publicar producto</a>
-      <a href="reservas.html">Mis reservas</a>
-      <a href="panel_negocio.html">Panel negocio</a>
+      <a href="producto_nuevo.html" id="publicar-link">Publicar producto</a>
+      <a href="reservas.html" id="reservas-link">Mis reservas</a>
+      <a href="panel_negocio.html" id="panel-link">Panel negocio</a>
       <span class="nav-user" id="nav-user" hidden></span>
       <a href="login.html" id="login-link">Iniciar sesión</a>
       <a href="register.html" id="register-link">Registrarse</a>
@@ -46,6 +46,14 @@
           <input type="password" id="password" name="password" required placeholder="Crea una contraseña" />
         </div>
 
+        <div class="form-group">
+          <label for="rol">Tipo de cuenta</label>
+          <select id="rol" name="rol" required>
+            <option value="CLIENTE">CLIENTE</option>
+            <option value="NEGOCIO">NEGOCIO</option>
+          </select>
+        </div>
+
         <div class="form-actions">
           <button type="submit" id="submit-button">Registrarme</button>
         </div>
@@ -73,7 +81,7 @@
         if (!stored) return null;
         try {
           const parsed = JSON.parse(stored);
-          if (parsed && parsed.idUsuario && parsed.nombre) {
+          if (parsed && (parsed.id || parsed.idUsuario) && parsed.nombre) {
             return parsed;
           }
         } catch (error) {
@@ -82,20 +90,38 @@
         return null;
       }
 
-      // Ajusta la navegación en función de la sesión
+      // Ajusta la navegación en función de la sesión y el rol
       function renderSession() {
         const currentUser = loadCurrentUser();
+
+        const reservasLink = document.getElementById("reservas-link");
+        const panelLink = document.getElementById("panel-link");
+        const publicarLink = document.getElementById("publicar-link");
+
         if (currentUser) {
           navUser.textContent = `Hola, ${currentUser.nombre}`;
           navUser.hidden = false;
           logoutButton.hidden = false;
           loginLink.hidden = true;
           registerLink.hidden = true;
+
+          if (currentUser.rol === "NEGOCIO") {
+            reservasLink.hidden = true;
+            panelLink.hidden = false;
+            publicarLink.hidden = false;
+          } else {
+            reservasLink.hidden = false;
+            panelLink.hidden = true;
+            publicarLink.hidden = true;
+          }
         } else {
           navUser.hidden = true;
           logoutButton.hidden = true;
           loginLink.hidden = false;
           registerLink.hidden = false;
+          reservasLink.hidden = true;
+          panelLink.hidden = true;
+          publicarLink.hidden = true;
         }
       }
 
@@ -133,8 +159,9 @@
         const nombreCompleto = form.nombre.value.trim();
         const email = form.email.value.trim();
         const password = form.password.value.trim();
+        const rol = form.rol.value;
 
-        if (!nombreCompleto || !email || !password) {
+        if (!nombreCompleto || !email || !password || !rol) {
           showMessage("Por favor completa todos los campos.", "error");
           return;
         }
@@ -148,7 +175,7 @@
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ nombreCompleto, email, password }),
+            body: JSON.stringify({ nombreCompleto, email, password, rol }),
           });
 
           if (!response.ok) {
