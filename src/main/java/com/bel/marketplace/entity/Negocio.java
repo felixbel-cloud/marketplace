@@ -1,9 +1,19 @@
 package com.bel.marketplace.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(exclude = {"productos", "reservas"})
+@ToString(exclude = {"productos", "reservas", "usuario"})
 @Entity
 @Table(name = "negocios")
 public class Negocio {
@@ -20,7 +30,16 @@ public class Negocio {
 
     private String telefono;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "usuario_id")
+    @JsonIgnoreProperties({"negocios", "reservas"})
     private Usuario usuario; // dueño del negocio
+
+    @OneToMany(mappedBy = "negocio")
+    @JsonIgnoreProperties("negocio")
+    private List<Producto> productos;
+
+    @OneToMany(mappedBy = "negocio")
+    @JsonIgnoreProperties({"negocio", "cliente", "producto"})
+    private List<Reserva> reservas;
 }
