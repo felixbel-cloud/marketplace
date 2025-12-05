@@ -23,6 +23,16 @@ public class ReservaController {
         return ResponseEntity.ok(reservaService.listar());
     }
 
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<List<Reserva>> listarPorCliente(@PathVariable Long clienteId) {
+        return ResponseEntity.ok(reservaService.listarPorCliente(clienteId));
+    }
+
+    @GetMapping("/producto/{productoId}")
+    public ResponseEntity<List<Reserva>> listarPorProducto(@PathVariable Long productoId) {
+        return ResponseEntity.ok(reservaService.listarPorProducto(productoId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Reserva> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(reservaService.obtenerPorId(id));
