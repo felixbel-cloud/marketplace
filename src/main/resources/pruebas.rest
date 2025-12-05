@@ -1,0 +1,24 @@
+POST http://localhost:8084/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Leche Gloria 1L",
+  "categoria": "Lácteos",
+  "descripcion": "Leche evaporada entera 1L",
+  "precioOriginal": 7.50,
+  "precioDescuento": 4.90,
+  "stock": 10,
+  "fechaVencimiento": "2025-12-10"
+}
+### Registrar negocio
+POST http://localhost:8084/api/negocios
+Content-Type: application/json
+
+{
+  "nombre": "Bodega Yordi",
+  "direccion": "Magdalena del Mar",
+  "telefono": "987654321"
+}
+
+### Listar negocios
+GET http://localhost:8084/api/negocios
