@@ -11,9 +11,9 @@
     <div class="brand">Market</div>
     <nav class="nav-links">
       <a href="index.html" aria-current="page">Inicio</a>
-      <a href="producto_nuevo.html">Publicar producto</a>
-      <a href="reservas.html">Mis reservas</a>
-      <a href="panel_negocio.html">Panel negocio</a>
+      <a href="producto_nuevo.html" id="publicar-link">Publicar producto</a>
+      <a href="reservas.html" id="reservas-link">Mis reservas</a>
+      <a href="panel_negocio.html" id="panel-link">Panel negocio</a>
       <span class="nav-user" id="nav-user" hidden></span>
       <a href="login.html" id="login-link">Log in</a>
       <a href="register.html" id="register-link">Register</a>
@@ -99,7 +99,7 @@
         if (!stored) return null;
         try {
           const parsed = JSON.parse(stored);
-          if (parsed && parsed.idUsuario && parsed.nombre) {
+          if (parsed && (parsed.id || parsed.idUsuario) && parsed.nombre) {
             return parsed;
           }
         } catch (error) {
@@ -108,20 +108,37 @@
         return null;
       }
 
-      // Ajusta la navegación según haya sesión activa o no
+      // Ajusta la navegación según haya sesión activa o no y el rol
       function renderSession() {
         const currentUser = loadCurrentUser();
+        const reservasLink = document.getElementById("reservas-link");
+        const panelLink = document.getElementById("panel-link");
+        const publicarLink = document.getElementById("publicar-link");
+
         if (currentUser) {
           navUser.textContent = `Hola, ${currentUser.nombre}`;
           navUser.hidden = false;
           logoutButton.hidden = false;
           loginLink.hidden = true;
           registerLink.hidden = true;
+
+          if (currentUser.rol === "NEGOCIO") {
+            reservasLink.hidden = true;
+            panelLink.hidden = false;
+            publicarLink.hidden = false;
+          } else {
+            reservasLink.hidden = false;
+            panelLink.hidden = true;
+            publicarLink.hidden = true;
+          }
         } else {
           navUser.hidden = true;
           logoutButton.hidden = true;
           loginLink.hidden = false;
           registerLink.hidden = false;
+          reservasLink.hidden = true;
+          panelLink.hidden = true;
+          publicarLink.hidden = true;
         }
       }
 
