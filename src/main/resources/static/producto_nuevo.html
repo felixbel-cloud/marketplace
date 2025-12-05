@@ -11,9 +11,15 @@
     <div class="brand">Market</div>
     <nav class="nav-links">
       <a href="index.html">Inicio</a>
+      <a href="producto_nuevo.html" aria-current="page">Publicar producto</a>
+      <a href="reservas.html">Mis reservas</a>
       <a href="panel_negocio.html">Panel negocio</a>
-      <a href="#" aria-disabled="true">Log in</a>
-      <a href="#" aria-disabled="true">Register</a>
+      <span class="nav-user" id="nav-user" hidden></span>
+      <a href="login.html" id="login-link">Log in</a>
+      <a href="register.html" id="register-link">Register</a>
+      <button type="button" class="logout-button" id="logout-button" hidden>
+        Cerrar sesión
+      </button>
     </nav>
   </header>
 
@@ -24,15 +30,21 @@
     </section>
 
     <section class="layout">
-      <section class="offers" style="width: 100%;">
-        <h2>Formulario de registro</h2>
-        <form id="product-form" class="card" style="gap: 12px;">
-          <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+      <section class="offers surface">
+        <div class="section-header">
+          <div>
+            <h2>Formulario de registro</h2>
+            <p class="helper-text">Completa la información del producto antes de publicarlo.</p>
+          </div>
+        </div>
+
+        <form id="product-form" class="form-shell">
+          <label class="input-stack">
             <span>Nombre</span>
             <input type="text" name="nombre" required placeholder="Nombre del producto" />
           </label>
 
-          <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+          <label class="input-stack">
             <span>Categoría</span>
             <select name="categoria" required>
               <option value="">Seleccione una categoría</option>
@@ -43,40 +55,42 @@
             </select>
           </label>
 
-          <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+          <label class="input-stack">
             <span>Descripción</span>
             <textarea name="descripcion" rows="3" placeholder="Describe el producto"></textarea>
           </label>
 
-          <div class="filters" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); display: grid; gap: 12px; align-items: stretch;">
-            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+          <div class="grid-responsive">
+            <label class="input-stack">
               <span>Precio original</span>
               <input type="number" name="precioOriginal" min="0" step="0.01" required placeholder="0.00" />
             </label>
 
-            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+            <label class="input-stack">
               <span>Precio con descuento</span>
               <input type="number" name="precioDescuento" min="0" step="0.01" placeholder="0.00" />
             </label>
 
-            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+            <label class="input-stack">
               <span>Stock</span>
               <input type="number" name="stock" min="0" step="1" required placeholder="Cantidad disponible" />
             </label>
 
-            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+            <label class="input-stack">
               <span>Fecha de vencimiento</span>
               <input type="date" name="fechaVencimiento" />
             </label>
 
-            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+            <label class="input-stack">
               <span>ID del negocio</span>
               <input type="number" name="idNegocio" min="1" step="1" required placeholder="Ej. 123" />
             </label>
           </div>
 
-          <button type="submit" id="submit-button">Registrar producto</button>
-          <div id="form-message" class="meta" role="alert" aria-live="polite"></div>
+          <div class="section-actions">
+            <button type="submit" class="primary-button" id="submit-button">Registrar producto</button>
+            <div id="form-message" class="helper-text" role="alert" aria-live="polite"></div>
+          </div>
         </form>
       </section>
     </section>
@@ -84,10 +98,52 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      const navUser = document.getElementById("nav-user");
+      const loginLink = document.getElementById("login-link");
+      const registerLink = document.getElementById("register-link");
+      const logoutButton = document.getElementById("logout-button");
+
       const form = document.getElementById("product-form");
       const message = document.getElementById("form-message");
       const submitButton = document.getElementById("submit-button");
       const API_URL = "http://localhost:8084/api/productos";
+
+      function loadCurrentUser() {
+        const stored = localStorage.getItem("usuarioActual");
+        if (!stored) return null;
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.idUsuario && parsed.nombre) {
+            return parsed;
+          }
+        } catch (error) {
+          return null;
+        }
+        return null;
+      }
+
+      function renderSession() {
+        const currentUser = loadCurrentUser();
+        if (currentUser) {
+          navUser.textContent = `Hola, ${currentUser.nombre}`;
+          navUser.hidden = false;
+          logoutButton.hidden = false;
+          loginLink.hidden = true;
+          registerLink.hidden = true;
+        } else {
+          navUser.hidden = true;
+          logoutButton.hidden = true;
+          loginLink.hidden = false;
+          registerLink.hidden = false;
+        }
+      }
+
+      logoutButton?.addEventListener("click", () => {
+        localStorage.removeItem("usuarioActual");
+        window.location.href = "index.html";
+      });
+
+      renderSession();
 
       function setStatus(text, isError = false) {
         message.textContent = text;
