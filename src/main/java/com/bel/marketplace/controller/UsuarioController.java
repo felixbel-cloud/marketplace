@@ -68,7 +68,21 @@ public class UsuarioController {
         usuario.setPassword(request.getContrasena());
 
         String rolString = request.getRol();
-        RolUsuario rol = rolString == null ? RolUsuario.CLIENTE : RolUsuario.valueOf(rolString.toUpperCase(Locale.ROOT));
+        RolUsuario rol;
+        if (rolString == null || rolString.trim().isEmpty()) {
+            rol = RolUsuario.CLIENTE;
+        } else {
+            switch (rolString.trim().toUpperCase(Locale.ROOT)) {
+                case "CLIENTE":
+                    rol = RolUsuario.CLIENTE;
+                    break;
+                case "NEGOCIO":
+                    rol = RolUsuario.NEGOCIO;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Rol inválido");
+            }
+        }
         usuario.setRol(rol);
         return usuario;
     }
