@@ -10,6 +10,8 @@ public interface UsuarioServiceInterface {
 
     Usuario obtenerPorId(Long id);
 
+    Usuario obtenerPorEmail(String email);
+
     Usuario crear(Usuario usuario);
 
     Usuario actualizar(Long id, Usuario usuario);

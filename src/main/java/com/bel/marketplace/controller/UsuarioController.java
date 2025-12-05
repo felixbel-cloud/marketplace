@@ -23,6 +23,11 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listar());
     }
 
+    @GetMapping("/buscar")
+    public ResponseEntity<Usuario> obtenerPorEmail(@RequestParam String email) {
+        return ResponseEntity.ok(usuarioService.obtenerPorEmail(email));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerPorId(id));
