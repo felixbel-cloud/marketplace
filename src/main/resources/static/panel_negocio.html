@@ -14,6 +14,12 @@
       <a href="producto_nuevo.html">Publicar producto</a>
       <a href="reservas.html">Mis reservas</a>
       <a href="panel_negocio.html" aria-current="page">Panel negocio</a>
+      <span class="nav-user" id="nav-user" hidden></span>
+      <a href="login.html" id="login-link">Log in</a>
+      <a href="register.html" id="register-link">Register</a>
+      <button type="button" class="logout-button" id="logout-button" hidden>
+        Cerrar sesión
+      </button>
     </nav>
   </header>
 
@@ -23,7 +29,7 @@
       <p class="meta">Consulta, edita o elimina los productos publicados de tu negocio.</p>
     </section>
 
-    <section class="card block">
+    <section class="surface block">
       <div class="controls">
         <div class="control-group">
           <label for="business-id">ID de negocio</label>
@@ -52,7 +58,7 @@
       </div>
     </section>
 
-    <section class="card block" id="edit-panel" hidden>
+    <section class="surface block" id="edit-panel" hidden>
       <h2>Editar producto</h2>
       <form id="edit-form" class="edit-form">
         <div class="form-grid">
@@ -77,6 +83,11 @@
     document.addEventListener("DOMContentLoaded", () => {
       const API_BASE_URL = "http://localhost:8084/api";
 
+      const navUser = document.getElementById("nav-user");
+      const loginLink = document.getElementById("login-link");
+      const registerLink = document.getElementById("register-link");
+      const logoutButton = document.getElementById("logout-button");
+
       const businessInput = document.getElementById("business-id");
       const loadButton = document.getElementById("load-products");
       const statusMessage = document.getElementById("status-message");
@@ -90,6 +101,43 @@
       let currentBusinessId = null;
       let products = [];
       let editingProduct = null;
+
+      function loadCurrentUser() {
+        const stored = localStorage.getItem("usuarioActual");
+        if (!stored) return null;
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.idUsuario && parsed.nombre) {
+            return parsed;
+          }
+        } catch (error) {
+          return null;
+        }
+        return null;
+      }
+
+      function renderSession() {
+        const currentUser = loadCurrentUser();
+        if (currentUser) {
+          navUser.textContent = `Hola, ${currentUser.nombre}`;
+          navUser.hidden = false;
+          logoutButton.hidden = false;
+          loginLink.hidden = true;
+          registerLink.hidden = true;
+        } else {
+          navUser.hidden = true;
+          logoutButton.hidden = true;
+          loginLink.hidden = false;
+          registerLink.hidden = false;
+        }
+      }
+
+      logoutButton?.addEventListener("click", () => {
+        localStorage.removeItem("usuarioActual");
+        window.location.href = "index.html";
+      });
+
+      renderSession();
 
       function setStatus(message, type = "info") {
         statusMessage.textContent = message;

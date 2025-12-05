@@ -12,9 +12,14 @@
     <nav class="nav-links">
       <a href="index.html">Inicio</a>
       <a href="producto_nuevo.html">Publicar producto</a>
+      <a href="reservas.html" aria-current="page">Mis reservas</a>
       <a href="panel_negocio.html">Panel negocio</a>
-      <a href="#" aria-disabled="true">Log in</a>
-      <a href="#" aria-disabled="true">Register</a>
+      <span class="nav-user" id="nav-user" hidden></span>
+      <a href="login.html" id="login-link">Log in</a>
+      <a href="register.html" id="register-link">Register</a>
+      <button type="button" class="logout-button" id="logout-button" hidden>
+        Cerrar sesión
+      </button>
     </nav>
   </header>
 
@@ -25,56 +30,67 @@
     </section>
 
     <section class="layout">
-      <section class="offers" style="width: 100%;">
-        <h2>Nueva reserva</h2>
-        <form id="reservation-form" class="card" style="gap: 12px;">
-          <div class="filters" style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: stretch;">
-            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+      <section class="offers surface">
+        <div class="section-header">
+          <div>
+            <h2>Nueva reserva</h2>
+            <p class="helper-text">Registra rápidamente una nueva reserva de cliente.</p>
+          </div>
+        </div>
+
+        <form id="reservation-form" class="form-shell">
+          <div class="grid-responsive">
+            <label class="input-stack">
               <span>ID del cliente</span>
               <input type="number" name="idCliente" min="1" step="1" required placeholder="Ej. 12" />
             </label>
 
-            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+            <label class="input-stack">
               <span>ID del producto</span>
               <input type="number" name="idProducto" min="1" step="1" required placeholder="Ej. 34" />
             </label>
 
-            <label class="filter-option" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+            <label class="input-stack">
               <span>Cantidad</span>
               <input type="number" name="cantidad" min="1" step="1" required placeholder="Ej. 2" />
             </label>
           </div>
 
-          <div class="meta" style="margin-top: -4px;">La fecha se asignará automáticamente al día actual.</div>
-          <button type="submit" id="submit-reservation">Registrar reserva</button>
-          <div id="form-status" class="meta" role="alert" aria-live="polite"></div>
+          <p class="helper-text">La fecha se asignará automáticamente al día actual.</p>
+          <div class="section-actions">
+            <button type="submit" class="primary-button" id="submit-reservation">Registrar reserva</button>
+            <div id="form-status" class="helper-text" role="alert" aria-live="polite"></div>
+          </div>
         </form>
       </section>
 
-      <section class="offers" style="width: 100%;">
-        <div style="display: flex; align-items: center; gap: 12px; justify-content: space-between; flex-wrap: wrap;">
-          <h2>Reservas registradas</h2>
-          <div class="search-bar" style="gap: 8px; width: auto;">
+      <section class="offers surface">
+        <div class="section-header">
+          <div>
+            <h2>Reservas registradas</h2>
+            <p class="helper-text">Filtra por cliente o revisa el historial completo.</p>
+          </div>
+          <div class="search-bar inline">
             <input type="number" id="idClienteFiltro" min="1" step="1" placeholder="ID cliente" />
-            <button type="button" id="filter-button">Filtrar</button>
-            <button type="button" id="reset-button">Ver todas</button>
+            <button type="button" class="primary-button" id="filter-button">Filtrar</button>
+            <button type="button" id="reset-button" class="primary-button">Ver todas</button>
           </div>
         </div>
 
-        <div class="card" style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse;">
+        <div class="table-wrapper">
+          <table class="table-simple">
             <thead>
               <tr>
-                <th style="text-align: left; padding: 8px;">ID</th>
-                <th style="text-align: left; padding: 8px;">Cliente</th>
-                <th style="text-align: left; padding: 8px;">Producto</th>
-                <th style="text-align: left; padding: 8px;">Cantidad</th>
-                <th style="text-align: left; padding: 8px;">Fecha</th>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Fecha</th>
               </tr>
             </thead>
             <tbody id="reservations-body">
               <tr>
-                <td colspan="5" style="padding: 12px; color: #6b7280;">Cargando reservas...</td>
+                <td colspan="5" class="meta">Cargando reservas...</td>
               </tr>
             </tbody>
           </table>
@@ -85,6 +101,11 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      const navUser = document.getElementById("nav-user");
+      const loginLink = document.getElementById("login-link");
+      const registerLink = document.getElementById("register-link");
+      const logoutButton = document.getElementById("logout-button");
+
       const form = document.getElementById("reservation-form");
       const formStatus = document.getElementById("form-status");
       const submitButton = document.getElementById("submit-reservation");
@@ -94,6 +115,43 @@
       const resetButton = document.getElementById("reset-button");
 
       const API_BASE_URL = "http://localhost:8084/api/reservas";
+
+      function loadCurrentUser() {
+        const stored = localStorage.getItem("usuarioActual");
+        if (!stored) return null;
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.idUsuario && parsed.nombre) {
+            return parsed;
+          }
+        } catch (error) {
+          return null;
+        }
+        return null;
+      }
+
+      function renderSession() {
+        const currentUser = loadCurrentUser();
+        if (currentUser) {
+          navUser.textContent = `Hola, ${currentUser.nombre}`;
+          navUser.hidden = false;
+          logoutButton.hidden = false;
+          loginLink.hidden = true;
+          registerLink.hidden = true;
+        } else {
+          navUser.hidden = true;
+          logoutButton.hidden = true;
+          loginLink.hidden = false;
+          registerLink.hidden = false;
+        }
+      }
+
+      logoutButton?.addEventListener("click", () => {
+        localStorage.removeItem("usuarioActual");
+        window.location.href = "index.html";
+      });
+
+      renderSession();
 
       function setStatus(text, isError = false) {
         formStatus.textContent = text;
