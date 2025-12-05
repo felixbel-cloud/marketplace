@@ -2,10 +2,13 @@ package com.bel.marketplace.controller;
 
 import com.bel.marketplace.entity.Producto;
 import com.bel.marketplace.repository.ProductoRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -19,29 +22,35 @@ public class ProductoController {
 
     // Listar todos los productos
     @GetMapping
-    public List<Producto> listarTodos() {
-        return productoRepository.findAll();
+    public ResponseEntity<List<Producto>> listarTodos() {
+        return ResponseEntity.ok(productoRepository.findAll());
     }
 
     // Buscar producto por id
     @GetMapping("/{id}")
-    public Producto obtenerPorId(@PathVariable Long id) {
-        return productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+    public ResponseEntity<Producto> obtenerPorId(@PathVariable Long id) {
+        Optional<Producto> producto = productoRepository.findById(id);
+        return producto.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // Crear producto
     @PostMapping
-    public Producto crear(@RequestBody Producto producto) {
-        return productoRepository.save(producto);
+    public ResponseEntity<Producto> crear(@RequestBody Producto producto) {
+        Producto creado = productoRepository.save(producto);
+        return ResponseEntity.created(URI.create("/api/productos/" + creado.getId())).body(creado);
     }
 
     // Actualizar producto
     @PutMapping("/{id}")
-    public Producto actualizar(@PathVariable Long id, @RequestBody Producto datos) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+    public ResponseEntity<Producto> actualizar(@PathVariable Long id, @RequestBody Producto datos) {
+        Optional<Producto> existente = productoRepository.findById(id);
 
+        if (existente.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Producto producto = existente.get();
         producto.setNombre(datos.getNombre());
         producto.setCategoria(datos.getCategoria());
         producto.setDescripcion(datos.getDescripcion());
@@ -51,26 +60,33 @@ public class ProductoController {
         producto.setFechaVencimiento(datos.getFechaVencimiento());
         producto.setNegocio(datos.getNegocio());
 
-        return productoRepository.save(producto);
+        Producto actualizado = productoRepository.save(producto);
+        return ResponseEntity.ok(actualizado);
     }
 
     // Eliminar producto
     @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        Optional<Producto> existente = productoRepository.findById(id);
+        if (existente.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
         productoRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
     // Listar por categoría
     @GetMapping("/categoria/{categoria}")
-    public List<Producto> listarPorCategoria(@PathVariable String categoria) {
-        return productoRepository.findByCategoria(categoria);
+    public ResponseEntity<List<Producto>> listarPorCategoria(@PathVariable String categoria) {
+        return ResponseEntity.ok(productoRepository.findByCategoria(categoria));
     }
 
     // Productos próximos a vencer (ej: próximos X días)
     @GetMapping("/proximos-vencer")
-    public List<Producto> proximosAVencer(@RequestParam(defaultValue = "3") int dias) {
+    public ResponseEntity<List<Producto>> proximosAVencer(@RequestParam(defaultValue = "3") int dias) {
         LocalDate hoy = LocalDate.now();
         LocalDate limite = hoy.plusDays(dias);
-        return productoRepository.findByFechaVencimientoBetween(hoy, limite);
+        return ResponseEntity.ok(productoRepository.findByFechaVencimientoBetween(hoy, limite));
     }
 }
