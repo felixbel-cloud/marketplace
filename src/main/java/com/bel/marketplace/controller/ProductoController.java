@@ -84,7 +84,7 @@ public class ProductoController {
 
     // Productos próximos a vencer (ej: próximos X días)
     @GetMapping("/proximos-vencer")
-    public ResponseEntity<List<Producto>> proximosAVencer(@RequestParam(defaultValue = "3") int dias) {
+    public ResponseEntity<List<Producto>> proximosAVencer(@RequestParam(name = "dias", defaultValue = "3") int dias) {
         LocalDate hoy = LocalDate.now();
         LocalDate limite = hoy.plusDays(dias);
         return ResponseEntity.ok(productoRepository.findByFechaVencimientoBetween(hoy, limite));
