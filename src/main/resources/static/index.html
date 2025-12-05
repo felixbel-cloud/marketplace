@@ -23,6 +23,9 @@
         <input type="text" placeholder="Buscar productos o categorías" />
         <button type="button">Buscar</button>
       </div>
+      <div class="explore-offers">
+        <button type="button" id="explore-offers">Explorar ofertas</button>
+      </div>
     </section>
 
     <section class="layout">
@@ -58,6 +61,7 @@
       const offersList = document.querySelector(".offers-list");
       const searchInput = document.querySelector(".search-bar input");
       const searchButton = document.querySelector(".search-bar button");
+      const exploreOffersButton = document.querySelector("#explore-offers");
       const categoryCheckboxes = Array.from(
         document.querySelectorAll(".filters input[type='checkbox']")
       );
@@ -65,7 +69,9 @@
       const API_BASE_URL = "http://localhost:8084/api";
 
       let allProducts = [];
+      let expiringProducts = [];
       let currentProducts = [];
+      let mode = "all";
       const categoryCache = new Map();
 
       const currencyFormatter = new Intl.NumberFormat("es-PE", {
@@ -161,6 +167,7 @@
           if (!response.ok) throw new Error("No se pudieron obtener los productos.");
           const data = await response.json();
           allProducts = Array.isArray(data) ? data : [];
+          mode = "all";
           currentProducts = allProducts;
           applyFilters();
         } catch (error) {
@@ -190,6 +197,35 @@
         }
       }
 
+      async function fetchExpiringProducts() {
+        try {
+          const response = await fetch(
+            API_BASE_URL + "/productos/proximos-vencer?dias=7"
+          );
+          if (!response.ok) throw new Error();
+          const data = await response.json();
+          expiringProducts = Array.isArray(data) ? data : [];
+          mode = "expiring";
+          currentProducts = expiringProducts;
+          const hasActiveCategories = categoryCheckboxes.some(
+            (checkbox) => checkbox.checked
+          );
+
+          if (hasActiveCategories) {
+            await updateByCategory();
+          } else {
+            applyFilters();
+          }
+        } catch (error) {
+          offersList.innerHTML = "";
+          const message = document.createElement("p");
+          message.className = "meta";
+          message.textContent =
+            "No fue posible cargar las ofertas próximas a vencer.";
+          offersList.appendChild(message);
+        }
+      }
+
       async function updateByCategory() {
         const activeCategories = categoryCheckboxes
           .filter((checkbox) => checkbox.checked)
@@ -197,7 +233,17 @@
           .filter(Boolean);
 
         if (!activeCategories.length) {
-          currentProducts = allProducts;
+          currentProducts = mode === "expiring" ? expiringProducts : allProducts;
+          applyFilters();
+          return;
+        }
+
+        if (mode === "expiring") {
+          const filtered = expiringProducts.filter((product) => {
+            const category = (product.categoria || "").trim();
+            return category && activeCategories.includes(category);
+          });
+          currentProducts = filtered;
           applyFilters();
           return;
         }
@@ -215,6 +261,7 @@
 
       searchInput.addEventListener("input", applyFilters);
       searchButton.addEventListener("click", applyFilters);
+      exploreOffersButton.addEventListener("click", fetchExpiringProducts);
 
       categoryCheckboxes.forEach((checkbox) => {
         checkbox.addEventListener("change", updateByCategory);
